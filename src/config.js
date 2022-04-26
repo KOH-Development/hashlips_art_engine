@@ -5,18 +5,26 @@ const { NETWORK } = require(`${basePath}/constants/network.js`);
 const network = NETWORK.eth;
 
 // General metadata for Ethereum
-const namePrefix = "Your Collection";
-const description = "Remember to replace this description";
+const namePrefix = "Pixelmech Warriors";
+const description = "Pixelmech Warriors is a collection of 750 pieces on the NEAR Blockchain.";
 const baseUri = "ipfs://NewUriToReplace";
 
 const solanaMetadata = {
-  symbol: "YC",
-  seller_fee_basis_points: 1000, // Define how much % you want from secondary market sales 1000 = 10%
-  external_url: "https://www.youtube.com/c/hashlipsnft",
+  symbol: "PMW0",
+  seller_fee_basis_points: 600, // Define how much % you want from secondary market sales 1000 = 10%
+  external_url: "https://pixelmechwarriors.nearfrontier.online/",
   creators: [
     {
-      address: "7fXNuer5sbZtaTEPhtJ5g5gNtuyRoKkvxdjEjEnPN4mC",
-      share: 100,
+      address: "pixelmechwarriors.near",
+      share: 600,
+    },
+    {
+      address: "offseason.near",
+      share: 200,
+    },
+    {
+      address: "shakiev.near",
+      share: 600,
     },
   ],
 };
@@ -24,15 +32,16 @@ const solanaMetadata = {
 // If you have selected Solana then the collection starts from 0 automatically
 const layerConfigurations = [
   {
-    growEditionSizeTo: 5,
+    growEditionSizeTo: 300,
     layersOrder: [
       { name: "Background" },
-      { name: "Eyeball" },
-      { name: "Eye color" },
-      { name: "Iris" },
-      { name: "Shine" },
-      { name: "Bottom lid" },
-      { name: "Top lid" },
+      { name: "Chest" },
+      { name: "Left Leg" },
+      { name: "Right Leg" },
+      { name: "Left Arm" },
+      { name: "Right Arm" },
+      { name: "Pilot" },
+      { name: "Regiment Trait" },
     ],
   },
 ];
@@ -42,8 +51,8 @@ const shuffleLayerConfigurations = false;
 const debugLogs = false;
 
 const format = {
-  width: 512,
-  height: 512,
+  width: 1000,
+  height: 1000,
   smoothing: false,
 };
 
