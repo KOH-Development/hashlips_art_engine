@@ -34,47 +34,64 @@ const layerConfigurations = [
   {
     growEditionSizeTo: 299,
     layersOrder: [
-      { name: "Faction/Fremen" },
-      { name: "Background/Fremen" },
-      { name: "Chest/Fremen" },
-      { name: "Left Leg/Fremen" },
-      { name: "Right Leg/Fremen" },
-      { name: "Left Arm/Fremen" },
-      { name: "Right Arm/Fremen" },
-      { name: "Pilot/Fremen" },
-      { name: "Regiment Trait/Fremen" },
-    ],
+      { name: "Faction/Fremen", options: { displayName: "Faction", }, },
+      { name: "Background/Fremen", options: { displayName: "Background", }, },
+      { name: "Chest/Fremen", options: { displayName: "Chest", }, },
+      { name: "Left Leg/Fremen", options: { displayName: "Left Leg", }, },
+      { name: "Right Leg/Fremen", options: { displayName: "Right Leg", }, },
+      { name: "Left Arm/Fremen", options: { displayName: "Left Arm", }, },
+      { name: "Right Arm/Fremen", options: { displayName: "Right Arm", }, },
+      { name: "Pilot/Fremen", options: { displayName: "Pilot", }, },
+      { name: "Regiment Trait/Fremen", options: { displayName: "Regiment Trait", }, },
 
+      // { name: "Fur" },
+      // { name: "Hair", 
+      //   options: {
+      //     subGroup: true, // existance of sub folder corresponding to each kind of fur
+      //     linkLayer: 7, // layer 7 of Fur
+      //   },
+      // },
+      // { name: "Hats",  
+      //   options: {
+      //     noneToReveal: ['Hat_type1.png', 'Hat_type2.png'], // list of hats
+      //                                    // revealed only when Hair is None
+      //     linkLayer: 8, // layer 8 of Hair
+      //   },
+      // },  
+    ],
+  },
+  {
     growEditionSizeTo: 598,
     layersOrder: [
-      { name: "Faction/Renegade" },
-      { name: "Background/Renegade" },
-      { name: "Chest/Renegade" },
-      { name: "Left Leg/Renegade" },
-      { name: "Right Leg/Renegade" },
-      { name: "Left Arm/Renegade" },
-      { name: "Right Arm/Renegade" },
-      { name: "Pilot/Renegade" },
-      { name: "Regiment Trait/Renegade" },
+      { name: "Faction/Renegade", options: { displayName: "Faction", }, },
+      { name: "Background/Renegade", options: { displayName: "Background", }, },
+      { name: "Chest/Renegade", options: { displayName: "Chest", }, },
+      { name: "Left Leg/Renegade", options: { displayName: "Left Leg", }, },
+      { name: "Right Leg/Renegade", options: { displayName: "Right Leg", }, },
+      { name: "Left Arm/Renegade", options: { displayName: "Left Arm", }, },
+      { name: "Right Arm/Renegade", options: { displayName: "Right Arm", }, },
+      { name: "Pilot/Renegade", options: { displayName: "Pilot", }, },
+      { name: "Regiment Trait/Renegade", options: { displayName: "Regiment Trait", }, },
     ],
+  },{
     growEditionSizeTo: 747,
     layersOrder: [
-      { name: "Faction/Broken" },
-      { name: "Background/Broken" },
-      { name: "Chest/Broken" },
-      { name: "Left Leg/Broken" },
-      { name: "Right Leg/Broken" },
-      { name: "Left Arm/Broken" },
-      { name: "Right Arm/Broken" },
-      { name: "Pilot/Broken" },
-      { name: "Regiment Trait/Broken" },
+      { name: "Faction/Broken", options: { displayName: "Faction", }, },
+      { name: "Background/Broken", options: { displayName: "Background", }, },
+      { name: "Chest/Broken", options: { displayName: "Chest", }, },
+      { name: "Left Leg/Broken", options: { displayName: "Left Leg", }, },
+      { name: "Right Leg/Broken", options: { displayName: "Right Leg", }, },
+      { name: "Left Arm/Broken", options: { displayName: "Left Arm", }, },
+      { name: "Right Arm/Broken", options: { displayName: "Right Arm", }, },
+      { name: "Pilot/Broken", options: { displayName: "Pilot", }, },
+      { name: "Regiment Trait/Broken", options: { displayName: "Regiment Trait", }, },
     ],
   },
 ];
 
 const shuffleLayerConfigurations = false;
 
-const debugLogs = false;
+const debugLogs = true;
 
 const format = {
   width: 1000,
