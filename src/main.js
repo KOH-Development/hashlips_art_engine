@@ -35,7 +35,8 @@ let hashlipsGiffer = null;
 
 const buildSetup = () => {
   if (fs.existsSync(buildDir)) {
-    fs.rmdirSync(buildDir, { recursive: true });
+    // fs.rmdirSync => fs.rmSync due to fs.rmdirSync being degraded
+    fs.rmSync(buildDir, { recursive: true });
   }
   fs.mkdirSync(buildDir);
   fs.mkdirSync(`${buildDir}/json`);
@@ -68,7 +69,11 @@ const cleanName = (_str) => {
   return nameWithoutWeight;
 };
 
-const getElements = (path) => {
+/* get elements for all image files under a path.
+   The elements are put into a flat array.
+   return [{id, name, filename, path, weight}...]
+*/
+const getFlatElements = (path) => {
   return fs
     .readdirSync(path)
     .filter((item) => !/(^|\/)\.[^\/\.]/g.test(item))
@@ -86,10 +91,104 @@ const getElements = (path) => {
     });
 };
 
+// get sub folders or file names under a path
+const getSubDirs = (path) => {
+  return fs
+    .readdirSync(path)
+    .filter((item) => !/(^|\/)\.[^\/\.]/g.test(item))
+}
+
+/* get elements for a layer with sub folders.
+   The elements are grouped into an array for the files under each sub folder, 
+   and an object of {group: folder_name, elements: element_array} is created for
+   a sub folder, thus such multiple objects are arrayed together.
+   return [{ group: folder_name, 
+             elements:[{id, name, filename, path, weight}...]}...]
+*/
+const getRecursiveElements = (path) => {
+  return getSubDirs(path)
+    .map((obj) => ({
+      group: obj,
+      elements: fs.readdirSync(path + obj)
+        .map((i, index) => {
+          return {
+            id: index,
+            name: cleanName(i),
+            filename: i,
+            path: `${path}${obj}/${i}`,
+            weight: getRarityWeight(i),
+          }
+        })
+    }))
+}
+
+/* get elements for a layer where some images are revealed only when a 
+   specified layer's image is None while others revealed else.
+   The elements are grouped in two objects, one has a key named 'noneToReveal'
+   for elements which only reveal when the specified layer's image is None, the
+   other has a key named 'overlapReveal' for elements which reveal when the
+   specified layer's image is not None.
+   return {noneToReveal: [{id, name, filename, path, weight}...], 
+           overlapReveal: [{id, name, filename, path, weight}...]}
+*/
+const getNoneToRevealElements = (layerObj) => {
+  // get all files under the layer
+  let allFiles = fs.readdirSync(`${layersDir}/${layerObj.name}/`)
+    .filter((item) => !/(^|\/)\.[^\/\.]/g.test(item))
+
+  // get noneToRevealFiles/overlapRevealFiles by intersecting/differenting allFiles 
+  // with/from noneToReveal files specified in the layerObj.options.noneToReveal
+  noneToRevealFiles = allFiles.filter((val) => { return layerObj.options.noneToReveal.indexOf(val) > -1 })
+  overlapRevealFiles = allFiles.filter((val) => { return layerObj.options.noneToReveal.indexOf(val) === -1 })
+
+  // get noneToRevealElements and overlapRevealElements
+  noneToRevealElements =
+    noneToRevealFiles.map((i, index) => ({
+      id: index,
+      name: cleanName(i),
+      filename: i,
+      path: `${layersDir}/${layerObj.name}/${i}`,
+      weight: getRarityWeight(i),
+    }))
+
+  overlapRevealElements =
+    overlapRevealFiles.map((i, index) => ({
+      id: index,
+      name: cleanName(i),
+      filename: i,
+      path: `${layersDir}/${layerObj.name}/${i}`,
+      weight: getRarityWeight(i),
+    }))
+
+  // form a object and return
+  return { noneToReveal: noneToRevealElements, overlapReveal: overlapRevealElements }
+}
+
+
+/* get elements (single_element = {id, name, filename, path, weight}) for a layerObj in 
+   three different conditions:
+   1. (layerObj.options?.['subGroup'] == true) => layer has sub folders
+   2. (layerObj.options?.['noneToReveal']?.length > 0) => images are grouped together in
+       different conditons whether a specified other layer image is None or not
+   3. normal contdition: elements are gathered in a flat array [single_element ...]
+*/
+const getElements = (layerObj) => {
+  let elements =
+    layerObj.options?.['subGroup'] == true
+      ? getRecursiveElements(`${layersDir}/${layerObj.name}/`)
+      : (layerObj.options?.['noneToReveal']?.length > 0
+        ? getNoneToRevealElements(layerObj)
+        : getFlatElements(`${layersDir}/${layerObj.name}/`)
+      )
+  return elements
+}
+
+// set up layers in a standard way to be used for createDna(), constructDnaLayer() etc.
 const layersSetup = (layersOrder) => {
   const layers = layersOrder.map((layerObj, index) => ({
     id: index,
-    elements: getElements(`${layersDir}/${layerObj.name}/`),
+    elements:
+      getElements(layerObj), //elements may be grouped in three different ways 
     name:
       layerObj.options?.["displayName"] != undefined
         ? layerObj.options?.["displayName"]
@@ -106,6 +205,18 @@ const layersSetup = (layersOrder) => {
       layerObj.options?.["bypassDNA"] !== undefined
         ? layerObj.options?.["bypassDNA"]
         : false,
+    subGroup:
+      layerObj.options?.["subGroup"] !== undefined
+        ? layerObj.options?.["subGroup"]
+        : false,
+    linkLayer:
+      layerObj.options?.["linkLayer"] !== undefined
+        ? layerObj.options?.["linkLayer"]
+        : -1,
+    noneToReveal:
+      layerObj.options?.["noneToReveal"] !== undefined
+        ? layerObj.options?.["noneToReveal"]
+        : [],
   }));
   return layers;
 };
@@ -173,8 +284,12 @@ const addMetadata = (_dna, _edition) => {
 
 const addAttributes = (_element) => {
   let selectedElement = _element.layer.selectedElement;
+  console.log(JSON.stringify(selectedElement));
+  console.log(JSON.stringify(_element));
   attributesList.push({
-    trait_type: _element.layer.name,
+    trait_type: _element.layer.options?.["displayName"] != undefined
+      ? _element.layer.options?.["displayName"]
+      : _element.layer.name,
     value: selectedElement.name,
   });
 };
@@ -201,27 +316,48 @@ const addText = (_sig, x, y, size) => {
 const drawElement = (_renderObject, _index, _layersLen) => {
   ctx.globalAlpha = _renderObject.layer.opacity;
   ctx.globalCompositeOperation = _renderObject.layer.blend;
+  console.log(JSON.stringify(_renderObject.layer));
   text.only
     ? addText(
-        `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
-        text.xGap,
-        text.yGap * (_index + 1),
-        text.size
-      )
+      `${_renderObject.layer.name}${text.spacer}${_renderObject.layer.selectedElement.name}`,
+      text.xGap,
+      text.yGap * (_index + 1),
+      text.size
+    )
     : ctx.drawImage(
-        _renderObject.loadedImage,
-        0,
-        0,
-        format.width,
-        format.height
-      );
+      _renderObject.loadedImage,
+      0,
+      0,
+      format.width,
+      format.height
+    );
 
   addAttributes(_renderObject);
 };
 
 const constructLayerToDna = (_dna = "", _layers = []) => {
   let mappedDnaToLayers = _layers.map((layer, index) => {
-    let selectedElement = layer.elements.find(
+    /* As elements are grouped in three ways for each different kind of layer as specified in
+           layerConfigurations.layersOrder by the file src/config.js, elements are extracted for
+           each layer in their conresponding ways.
+        */
+    // if the layer has sub_groups, the elements are nested in the sub_group 
+    cur_elements =
+      layer.subGroup == true
+        ? (layer.elements.find(item =>
+          item.group === cleanName(_dna.split(DNA_DELIMITER)[layer.linkLayer].split(':').pop()))).elements
+        : layer.elements
+
+    // if some of images of the layer are only revealed when a specified layer image is None,
+    // the elements for these images are grouped in an object.
+    if (layer.noneToReveal.length > 0) {
+      cur_elements =
+        cleanName(_dna.split(DNA_DELIMITER)[layer.linkLayer].split(':').pop()) === 'None'
+          ? cur_elements['noneToReveal']
+          : cur_elements['overlapReveal']
+    }
+
+    let selectedElement = cur_elements.find(
       (e) => e.id == cleanDna(_dna.split(DNA_DELIMITER)[index])
     );
     return {
@@ -283,18 +419,35 @@ const createDna = (_layers) => {
   let randNum = [];
   _layers.forEach((layer) => {
     var totalWeight = 0;
-    layer.elements.forEach((element) => {
+    // if the layer has sub_groups, the elements are nested in the sub_group 
+    cur_elements =
+      layer.subGroup == true
+        ? (layer.elements.find(item =>
+          item.group === cleanName(randNum[layer.linkLayer].split(':').pop()))).elements
+        : layer.elements
+    // if some of images of the layer are only revealed when a specified layer image is None,
+    // the elements are grouped in an object.
+    if (layer.noneToReveal.length > 0) {
+      if (cleanName(randNum[layer.linkLayer].split(':').pop()) === 'None') {
+        cur_elements = cur_elements['noneToReveal']
+      }
+      else {
+        cur_elements = cur_elements['overlapReveal']
+      }
+    }
+
+    cur_elements.forEach((element) => {
       totalWeight += element.weight;
     });
+
     // number between 0 - totalWeight
     let random = Math.floor(Math.random() * totalWeight);
-    for (var i = 0; i < layer.elements.length; i++) {
+    for (var i = 0; i < cur_elements.length; i++) {
       // subtract the current weight from the random weight until we reach a sub zero value.
-      random -= layer.elements[i].weight;
+      random -= cur_elements[i].weight;
       if (random < 0) {
         return randNum.push(
-          `${layer.elements[i].id}:${layer.elements[i].filename}${
-            layer.bypassDNA ? "?bypassDNA=true" : ""
+          `${cur_elements[i].id}:${cur_elements[i].filename}${layer.bypassDNA ? "?bypassDNA=true" : ""
           }`
         );
       }
@@ -311,8 +464,8 @@ const saveMetaDataSingleFile = (_editionCount) => {
   let metadata = metadataList.find((meta) => meta.edition == _editionCount);
   debugLogs
     ? console.log(
-        `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
-      )
+      `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
+    )
     : null;
   fs.writeFileSync(
     `${buildDir}/json/${_editionCount}.json`,
