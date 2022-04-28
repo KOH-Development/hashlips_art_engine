@@ -78,7 +78,7 @@ const debugLogs = false;
 
 const format = {
   width: 1000,
-  height: 1000,
+  height: 780,
   smoothing: false,
 };
 
