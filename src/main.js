@@ -74,6 +74,7 @@ const cleanName = (_str) => {
    return [{id, name, filename, path, weight}...]
 */
 const getFlatElements = (path) => {
+  console.log(path);
   return fs
     .readdirSync(path)
     .filter((item) => !/(^|\/)\.[^\/\.]/g.test(item))
@@ -173,14 +174,15 @@ const getNoneToRevealElements = (layerObj) => {
    3. normal contdition: elements are gathered in a flat array [single_element ...]
 */
 const getElements = (layerObj) => {
+  //console.log(JSON.stringify(layerObj));
   let elements =
     layerObj.options?.['subGroup'] == true
-      ? getRecursiveElements(`${layersDir}/${layerObj.name}/`)
+      ? getRecursiveElements(`${layerObj}`)
       : (layerObj.options?.['noneToReveal']?.length > 0
-        ? getNoneToRevealElements(layerObj)
-        : getFlatElements(`${layersDir}/${layerObj.name}/`)
+        ? getNoneToRevealElements(`${layerObj}`)
+        : getFlatElements(`${layerObj}`)
       )
-  return elements
+  return elements;
 }
 
 // set up layers in a standard way to be used for createDna(), constructDnaLayer() etc.
