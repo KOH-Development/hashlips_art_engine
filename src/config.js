@@ -2,7 +2,7 @@ const basePath = process.cwd();
 const { MODE } = require(`${basePath}/constants/blend_mode.js`);
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 
-const network = NETWORK.eth;
+const network = NETWORK.near;
 
 // General metadata for Ethereum
 const namePrefix = "Pixelmech Warriors";
@@ -61,7 +61,7 @@ const layerConfigurations = [
     ],
   },
   {
-    growEditionSizeTo: 598,
+    growEditionSizeTo: 597,
     layersOrder: [
       { name: "Faction/Renegade", options: { displayName: "Faction", }, },
       { name: "Background/Renegade", options: { displayName: "Background", }, },
@@ -74,7 +74,7 @@ const layerConfigurations = [
       { name: "Regiment Trait/Renegade", options: { displayName: "Regiment Trait", }, },
     ],
   },{
-    growEditionSizeTo: 747,
+    growEditionSizeTo: 746,
     layersOrder: [
       { name: "Faction/Broken", options: { displayName: "Faction", }, },
       { name: "Background/Broken", options: { displayName: "Background", }, },
